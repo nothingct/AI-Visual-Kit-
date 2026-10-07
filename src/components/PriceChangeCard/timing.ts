@@ -9,8 +9,17 @@ export const priceChangeTiming = (frame: number, fps: number) => {
   const time = frame / fps;
   return {
     intro: easeOut(progress(time, 0, tokens.motion.introEnd)),
-    previous: easeOut(progress(time, tokens.motion.introEnd, 0.65)),
-    current: easeOut(progress(time, 0.65, tokens.motion.priceEnd)),
+    previous: easeOut(progress(time, tokens.motion.introEnd, tokens.motion.previousEnd)),
+    current: easeOut(progress(time, tokens.motion.currentStart, tokens.motion.priceEnd)),
     delta: easeOut(progress(time, tokens.motion.priceEnd, tokens.motion.deltaEnd)),
+  };
+};
+
+/** Independent arrow sweep and a small stagger; both settle before the final hold. */
+export const priceChangeDetailTiming = (frame: number, fps: number) => {
+  const time = frame / fps;
+  return {
+    arrow: easeOut(progress(time, tokens.motion.introEnd, tokens.motion.arrowEnd)),
+    percent: easeOut(progress(time, tokens.motion.priceEnd + 0.1, tokens.motion.deltaEnd)),
   };
 };
