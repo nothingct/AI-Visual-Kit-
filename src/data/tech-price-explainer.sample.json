@@ -1,0 +1,21 @@
+{
+  "title": "Galaxy S26",
+  "subtitle": "출시 후 가격 인상",
+  "previousPrice": 1254000,
+  "currentPrice": 1403600,
+  "emphasisLabel": "+149,600원",
+  "question": "왜 올랐을까?",
+  "componentLabels": [
+    "AP",
+    "DRAM",
+    "NAND",
+    "Display"
+  ],
+  "contextLabel": "한국 · 기본 모델 256GB",
+  "priceNote": "한국 공식 출고가 · 256GB",
+  "whySubtitle": "부품 비용, 다음 장에서 확인",
+  "theme": "techDynamic",
+  "increaseCaption": "약 15만 원 인상",
+  "previousLabel": "출시 당시",
+  "currentLabel": "인상 후"
+}

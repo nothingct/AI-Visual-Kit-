@@ -1,8 +1,8 @@
-# IT Visual Kit — SectionIntro v0.1
+# IT Visual Kit — Tech Price Explainer
 
-Global Shared Theme Architecture v0.1 위에 두 번째 영상용 컴포넌트 SectionIntro v0.1을 추가했습니다. PriceChangeCard v0.3의 디자인과 입력/렌더 기능은 유지합니다.
+Global Shared Theme Architecture v0.1을 재사용하는 9.5초 TechPriceExplainer 장면을 추가했습니다. 기존 PriceChangeCard v0.3 및 SectionIntro v0.1의 디자인과 입력/렌더 기능은 유지합니다.
 
-YouTube IT 콘텐츠에서 반복해서 사용할 React + Remotion + TypeScript 영상용 그래픽 키트입니다. **PriceChangeCard v0.3**와 **SectionIntro v0.1**을 제공합니다. 기본 출력은 **1920×1080 / 30fps**이며, PriceChangeCard는 2.5초, SectionIntro는 2.2초입니다. PNG 스틸과 H.264 MP4를 CapCut에 바로 가져올 수 있습니다.
+YouTube IT 콘텐츠에서 반복해서 사용할 React + Remotion + TypeScript 영상용 그래픽 키트입니다. **PriceChangeCard v0.3**, **SectionIntro v0.1**, **TechPriceExplainer**를 제공합니다. 기본 출력은 **1920×1080 / 30fps**이며, PriceChangeCard는 2.5초, SectionIntro는 2.2초입니다. PNG 스틸과 H.264 MP4를 CapCut에 바로 가져올 수 있습니다.
 
 ## 1. 설치
 
@@ -29,7 +29,7 @@ npm start
 # 같은 명령: npm run studio
 ```
 
-로컬 환경에서 브라우저로 `http://localhost:3000`을 열고 **PriceChangeCard** 또는 **SectionIntro**를 선택합니다. 재생 버튼으로 애니메이션을 보고, 타임라인을 이동해 각 프레임을 확인할 수 있습니다. 클라우드에서 외부 접속할 수 있는 Preview 주소는 실행 플랫폼의 포트 지원 여부에 따라 달라집니다.
+로컬 환경에서 브라우저로 `http://localhost:3000`을 열고 **PriceChangeCard**, **SectionIntro**, **TechPriceExplainer** 중 선택합니다. 재생 버튼으로 애니메이션을 보고, 타임라인을 이동해 각 프레임을 확인할 수 있습니다. 클라우드에서 외부 접속할 수 있는 Preview 주소는 실행 플랫폼의 포트 지원 여부에 따라 달라집니다.
 
 타입 검사와 테스트:
 
@@ -309,6 +309,83 @@ SectionIntro 30/60fps MP4 및 final PNG를 렌더하고, Studio 실제 재생과
 premiumMinimal/valuePop은 기존 전역 `src/design/themes/<name>.ts`에 GlobalTheme를 구현하고 `registry.ts`에서 planned를 implemented로 변경하면 됩니다. SectionIntro의 adapter/appearance는 전역 객체를 사용하므로 새 색상을 복사할 필요가 없습니다. 해당 컴포넌트에만 필요한 표현은 `SectionIntro/theme/`를 확장하세요. 미구현 테마는 현재도 명확한 오류로 차단합니다.
 
 다음 ProductCompare/Timeline도 facade → `getGlobalTheme()` → 전용 adapter → Core 구조를 사용하면 같은 디자인 언어를 공유할 수 있습니다. 이번 버전에는 다른 새 컴포넌트, Control Panel, Variant 시스템을 추가하지 않았습니다.
+
+## 11. TechPriceExplainer — 9.5-second cinematic scene
+
+Select **TechPriceExplainer** in Remotion Studio. This is a full-frame scene with a persistent, original OLED phone mockup, a moving perspective grid, three-dimensional device movement, a count-up price shock, a single expanding impact ring, and a connected component-cost reveal. The existing PriceChangeCard and SectionIntro remain separate and unchanged.
+
+The scene uses the Korean base-model 256GB prices supplied by the user: **1,254,000원 → 1,403,600원**, an exact **149,600원** increase. Supporting copy says **약 15만 원 인상**. These figures are stored in the sample input, not in the layout. The phone is an unbranded placeholder, not an official Samsung render. Component labels suggest the next analysis section; the scene does not assert that each component caused the increase.
+
+### Editorial controls and source organization
+
+```text
+src/data/tech-price-explainer.sample.json       # title, prices, emphasis, all copy and labels
+src/scenes/TechPriceExplainer/
+  TechPriceExplainer.tsx                       # scene choreography and layout
+  PhoneMockup.tsx                              # replaceable original SVG phone artwork
+  ComponentNetwork.tsx                        # 3–4 connected component labels
+  appearance.ts                               # local type scale, metal colors, orange shock
+  timing.ts                                   # all beat boundaries in seconds, easing
+  input.ts                                    # validation, KRW formatting, metadata
+  types.ts                                    # external input contract
+tests/tech-price-explainer.test.ts
+```
+
+- **Title:** `title` and `subtitle` in the JSON; corresponding title layout is commented in the scene.
+- **Prices:** integer `previousPrice` and `currentPrice`, in won. The scene computes its count-up from these numbers.
+- **Emphasis:** `emphasisLabel`, currently `+149,600원`; optional, and generated from the price difference when omitted or blank. Custom npm `--props` JSON without this field automatically generates the correct difference. In Studio/Remotion CLI, use `"emphasisLabel": ""` to clear the sample label after changing prices. `increaseCaption` controls the approximate supporting phrase.
+- **Component labels:** `componentLabels` accepts three or four strings. `ComponentNetwork.tsx` owns connected geometry.
+- **Question:** `question` and `whySubtitle` in the JSON.
+- **Other copy:** `contextLabel`, `priceNote`, `previousLabel`, `currentLabel` are external display strings.
+- **Timing:** edit `sceneTiming` in `timing.ts`. Metadata derives duration and frame count from the same duration value.
+- **Phone imagery:** replace `PhoneMockup.tsx` with a licensed image/mockup while preserving its 330×650 footprint; the parent scene retains camera motion.
+
+The facade/layout resolves the shared `getGlobalTheme()` language. The scene’s navy background, font, cool accent, labels and control surfaces come from GlobalTheme. Orange is an intentional **scene-specific** price-shock accent in `appearance.ts`; existing techDynamic tokens are unchanged.
+
+| Seconds | Beat / suggested voiceover alignment |
+| --- | --- |
+| 0–1.65 | Phone hero and Galaxy S26 title: “became more expensive after launch” |
+| 1.65–2.8 | Device moves right, earlier price reveals |
+| 2.8–3.7 | Earlier-price hold |
+| 3.7–4.62 | Count-up, warm ring, small push-in and exact +149,600원: “about 150,000 won” |
+| 4.62–6.1 | Price-shock hold |
+| 6.1–7.15 | Phone moves back into the center; 왜 올랐을까? replaces pricing |
+| 7.05–8.14 | AP / DRAM / NAND / Display lines and labels draw in |
+| 8.14–9.5 | Final question/network hold |
+
+The MP4 is **silent**. Add your recorded voiceover in CapCut and adjust the timing constants if its cadence differs. All motion comes from `frame / fps`, with cubic easing, and no timers or randomness.
+
+### Preview / quick export / full render
+
+```bash
+npm start
+# Choose TechPriceExplainer in Studio and play/scrub the timeline.
+
+# Fast two-second preview of the price shock: 960×540, frames 96–155 inclusive.
+npm run render:mp4 -- --composition TechPriceExplainer --scale 0.5 --frame-range 96-155 --output out/explainer-quick-preview.mp4
+
+# Full 1920×1080, 9.5 seconds, 30fps H.264 MP4.
+npm run render:mp4 -- --composition TechPriceExplainer
+# out/tech-price-explainer.mp4
+
+# Full length at half resolution, useful for checking choreography.
+npm run render:mp4 -- --composition TechPriceExplainer --scale 0.5 --output out/explainer-draft.mp4
+
+# Exact-price still (five seconds at 30fps).
+npm run render:png -- --composition TechPriceExplainer --frame 150 --output out/explainer-price.png
+# Final question frame.
+npm run render:png -- --composition TechPriceExplainer
+
+# Optional 60fps: 570 frames, same 9.5 seconds.
+npm run render:mp4 -- --composition TechPriceExplainer --fps 60 --output out/explainer-60.mp4
+
+# Replace editorial inputs with your JSON.
+npm run render:mp4 -- --composition TechPriceExplainer --props src/data/tech-price-explainer.sample.json
+```
+
+`--frame-range` is inclusive and applies to MP4 only; use frame numbers at the selected FPS. It preserves the original scene clock rather than restarting the animation at zero. `--scale` accepts 0.5 or 1; the default stays 1 for all existing render commands. This full-frame scene does not offer a transparent mode. PNG stills and H.264/yuv420p/BT.709 MP4 can be imported directly into CapCut.
+
+Validation: run `npm run typecheck` and `npm test`. Scene tests cover exact figures, numeric/content validation, planned/unknown theme errors, label counts, earlier-price hold and equivalent 30/60fps timing. Typecheck and all 23 tests passed. A full 1920×1080 / 30fps / 9.5-second MP4, key PNGs and two-second 960×540 previews at 30/60fps were rendered. Existing PriceChangeCard and SectionIntro final PNGs match their prior references pixel-for-pixel.
 
 ## 사용 시 참고
 
