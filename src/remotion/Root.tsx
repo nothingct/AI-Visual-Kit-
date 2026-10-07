@@ -1,3 +1,8 @@
+import {sceneTiming} from '../scenes/TechPriceExplainer/timing';
+import {TechPriceExplainer} from '../scenes/TechPriceExplainer/TechPriceExplainer';
+import {validateExplainerInput} from '../scenes/TechPriceExplainer/input';
+import type {TechPriceExplainerInput} from '../scenes/TechPriceExplainer/types';
+import explainerSample from '../data/tech-price-explainer.sample.json';
 import {Composition} from 'remotion';
 import {SectionIntro} from '../components/SectionIntro/SectionIntro';
 import {sectionIntroMetadata} from '../components/SectionIntro/metadata';
@@ -42,6 +47,16 @@ export const RemotionRoot = () => (
       durationInFrames={Math.round(30 * sectionIntroDurationSeconds)}
       defaultProps={sectionIntroDefaultProps}
       calculateMetadata={({props}) => sectionIntroMetadata(props)}
+    />
+    <Composition
+      id="TechPriceExplainer"
+      component={TechPriceExplainer}
+      width={1920}
+      height={1080}
+      fps={30}
+      durationInFrames={Math.round(30 * sceneTiming.duration)}
+      defaultProps={explainerSample as TechPriceExplainerInput}
+      calculateMetadata={({props}) => validateExplainerInput(props)}
     />
   </>
 );
