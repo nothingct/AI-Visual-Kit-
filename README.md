@@ -1,6 +1,6 @@
-# IT Visual Kit v0.2.1
+# IT Visual Kit v0.3
 
-YouTube IT 콘텐츠에서 반복해서 사용할 React + Remotion + TypeScript 영상용 그래픽 키트입니다. v0.2.1에는 **PriceChangeCard 하나만** 구현되어 있습니다. 기본 출력은 **1920×1080 / 30fps / 2.5초**이며, PNG 스틸과 H.264 MP4를 CapCut에 바로 가져올 수 있습니다.
+YouTube IT 콘텐츠에서 반복해서 사용할 React + Remotion + TypeScript 영상용 그래픽 키트입니다. v0.3에는 **PriceChangeCard 하나만** 구현되어 있습니다. 기본 출력은 **1920×1080 / 30fps / 2.5초**이며, PNG 스틸과 H.264 MP4를 CapCut에 바로 가져올 수 있습니다.
 
 ## 1. 설치
 
@@ -36,39 +36,59 @@ npm run typecheck
 npm test
 ```
 
-## 3. PriceChangeCard 데이터 변경
+## 3. 외부 입력: v0.3 canonical input과 기존 props
 
-기본 데이터는 `src/data/price-change.sample.json`에 있습니다. 아래 값은 사용자가 제공한 **샘플**이며, 실제 가격이나 출처 내용을 검증한 데이터가 아닙니다. 게시 전에 확인하세요.
+`src/data/price-change.input.json`은 향후 Control Panel에서도 전달할 수 있는 **PriceChangeCardInput** 예시입니다. 컴포넌트/Core 내부에 제품명이나 가격을 하드코딩하지 않습니다.
 
 ```json
 {
   "productName": "Galaxy S26 Ultra 256GB",
-  "oldPrice": "1,797,400원",
-  "newPrice": "1,947,000원",
+  "previousPrice": "1,797,400원",
+  "currentPrice": "1,947,000원",
   "delta": "+149,600원",
-  "deltaPercent": "+8.3%",
-  "dateLabel": "2026.03 → 2026.10",
+  "percentage": "+8.3%",
+  "period": "2026.03 → 2026.10",
   "priceType": "공식 출고가",
-  "sourceLabel": "Samsung Korea",
-  "direction": "up"
+  "source": "Samsung Korea",
+  "direction": "up",
+  "theme": "techDynamic"
 }
 ```
 
-가격과 증감은 **표시 문자열**입니다. 통화, 쉼표, 부호를 포함해 입력하세요. `delta`와 `deltaPercent`는 자동 계산하지 않으므로 가격과 일치하는 값을 제공해야 합니다. `direction`은 `up`, `down`, `neutral` 중 하나입니다. 색상뿐 아니라 ↑/↓/— 및 한글 라벨로 방향을 구분합니다.
+위 데이터는 사용자가 제공한 Preview 예시입니다. 가격·증감은 통화/부호/쉼표를 포함한 표시 문자열이며 자동 계산하지 않습니다. `direction`은 up/down/neutral, `theme` 기본값은 techDynamic입니다. `transparent?: boolean`, Composition의 `renderFps?: 30 | 60`도 유지합니다.
 
-Studio의 “Save default props”는 외부 JSON을 참조하는 이 구조를 자동 수정하지 못합니다. 데이터 변경은 샘플 JSON 파일 편집 또는 `--props` 입력으로 적용하세요.
+기존 `src/data/price-change.sample.json`과 기존 props는 **변경 없이** 지원합니다. 기존 `PriceChangeCardProps` 타입은 legacy 필드 접근을 유지하며, 새 호출자는 `PriceChangeCardInput`을 사용합니다. 컴포넌트 진입점은 둘 다 받는 `PriceChangeCardPublicProps`를 사용합니다.
 
-다른 JSON 파일을 사용할 수도 있습니다. 경로는 명령을 실행한 디렉터리를 기준으로 해석되며, 생략한 필드는 기본 샘플 값이 사용됩니다. 일관된 데이터를 위해 제품별 파일에는 위 9개 필드를 모두 입력하는 것을 권장합니다.
+| 기존 v0.2.1 필드 | canonical input |
+| --- | --- |
+| oldPrice | previousPrice |
+| newPrice | currentPrice |
+| deltaPercent | percentage |
+| dateLabel | period |
+| sourceLabel | source |
+
+productName, delta, priceType, direction, theme, transparent는 이름이 같습니다. `input.ts`의 `normalizePriceChangeInput()`이 alias를 변환하고 필수 문자열·방향·투명도 타입을 검증합니다. Remotion이 기존 Preview 기본 props와 새 input을 합칠 때 **canonical 필드가 우선**합니다. 빈 문자열/null인 canonical 값은 기본값으로 숨기지 않고 오류를 냅니다. 외부 호출자는 일관된 데이터를 위해 canonical 필드 전체를 제공하는 것을 권장합니다.
+
+```tsx
+import {PriceChangeCard} from './src/components/PriceChangeCard/PriceChangeCard';
+import type {PriceChangeCardInput} from './src/components/PriceChangeCard/types';
+
+// Remotion Composition 안에서 외부 객체를 그대로 전달할 수 있습니다.
+const input: PriceChangeCardInput = /* 위 JSON에 해당하는 외부 입력 */ externalInput;
+<PriceChangeCard {...input} />;
+```
+
+새로운 Data 관리 시스템이나 Control Panel은 만들지 않았습니다.
 
 ```bash
-npm run studio -- --props=./src/data/price-change.sample.json
-npm run render:mp4 -- --props ./src/data/price-change.sample.json
+npm run studio -- --props=./src/data/price-change.input.json
+npm run render:mp4 -- --props ./src/data/price-change.input.json
+npm run render:png -- --props ./src/data/price-change.input.json
+# 기존 파일도 계속 지원
 npm run render:png -- --props ./src/data/price-change.sample.json
 ```
 
-`theme`는 선택 prop이며 기본값은 `"techDynamic"`입니다. 기존 9개 데이터 필드만 있는 JSON도 그대로 동작합니다. 지금은 techDynamic만 구현되어 있으며 premiumMinimal/valuePop 등 미구현 테마를 지정하면 오류가 표시됩니다. 별도 JSON에 `"theme": "techDynamic"`을 추가해 명시할 수 있습니다.
-
-보조 렌더 옵션은 `renderFps: 30 | 60`, `transparent: boolean`입니다. Preview에서 60fps를 보려면 별도 JSON에 `"renderFps": 60`을 추가하고 `--props`로 읽습니다. 값이 비어 있거나 유효하지 않은 방향/FPS를 입력하면 렌더가 오류로 중단됩니다.
+기본 Preview는 기존 sample.json을 계속 사용합니다. Studio의 “Save default props”는 외부 JSON 참조를 자동 수정하지 못하므로 JSON 파일 편집 또는 `--props`로 입력하세요. Studio에서 60fps를 확인하려면 별도 JSON에 `"renderFps": 60`을 추가하세요. `--fps` 렌더 옵션은 JSON보다 우선합니다.
 
 ## 4. MP4 렌더 및 CapCut 사용
 
@@ -120,7 +140,7 @@ npm run render:png -- --fps 60 --output out/price-change-60.png
 npx remotion render src/index.ts PriceChangeCard out/direct-60.mp4 --props='{"renderFps":60}'
 ```
 
-## 7. v0.2.1 techDynamic 디자인과 애니메이션
+## 7. v0.2.1 디자인을 그대로 유지한 v0.3
 
 기본 테마는 **techDynamic**입니다. OLED/플래그십 IT 제품에서 연상되는 deep navy, near-black, blue/cyan 무드를 사용합니다. 공식 Samsung UI, 로고, One UI 요소를 사용하거나 복제하지 않습니다.
 
@@ -144,52 +164,60 @@ npx remotion render src/index.ts PriceChangeCard out/direct-60.mp4 --props='{"re
 
 현재 가격의 scale 변화는 0.985→1.0에 한정합니다. bounce, zoom, shake, pulse를 사용하지 않습니다. 모션은 `frame / fps` 기준이며 30/60fps에서 동일한 길이를 유지합니다.
 
-### 테마 구조와 확장
-
-`src/design/themes.ts`의 `ThemeTokens` 계약에 background, backgroundDepth, surface, surfaceLayer, primaryText, secondaryText, accent, increase, decrease, neutral, border, edgeHighlight, chipSurface, chipLayer, chipBorder, chipShadow, glow, shadow, radius, spacing을 정의했습니다. `glow`는 외부 발광이 아니라 카드 내부의 매우 약한 edge 효과입니다.
-
-`themes` 레지스트리와 `getTheme()`이 테마를 선택합니다. `PriceChangeTheme` 타입은 레지스트리 key에서 자동으로 생성됩니다. 테마를 생략하면 `defaultTheme = "techDynamic"`을 사용합니다. 방향 색상은 제품 브랜드와 독립적입니다. 폰트/해상도/모션 공통값은 `src/design/tokens.ts`에 유지합니다.
-
-**premiumMinimal / valuePop 추가 방법:**
-
-1. `src/design/themes.ts`의 `themes`에 해당 key와 `ThemeTokens`의 모든 값을 추가합니다. `satisfies Record<string, ThemeTokens>`가 필수 토큰 누락을 검사합니다.
-2. 데이터 JSON에 `"theme": "premiumMinimal"` 또는 `"theme": "valuePop"`을 지정합니다. 타입과 런타임 선택은 레지스트리에 따라 자동 확장됩니다.
-3. 기존 테마 테스트의 미구현 테마 오류 케이스를 새 테마의 성공 케이스로 바꾸고, PNG/MP4/투명 PNG와 축소 화면을 검증합니다.
-4. 공통 글자 크기와 모션은 tokens.ts에서 조정합니다. 테마별 typography/motion이 필요해지면 ThemeTokens에 해당 계약을 추가하세요. 독립적인 새 컴포넌트를 만들 필요는 없습니다.
-
-## 8. 구조와 향후 컴포넌트 추가
+## 8. Core / Theme / Input 구조
 
 ```text
-src/
-  index.ts                        # 폰트 및 Remotion 진입점
-  remotion/Root.tsx                # Composition 등록
-  design/tokens.ts                # 공통 해상도·글자 크기·모션
-  design/themes.ts                # 테마 계약·레지스트리·기본 테마
-  data/price-change.sample.json    # 제품 데이터
-  components/PriceChangeCard/
-    PriceChangeCard.tsx            # 유일한 그래픽 컴포넌트
-    types.ts                      # 입력 타입
-    timing.ts                     # 프레임 기반 모션
-    metadata.ts                   # 입력 검증, FPS/길이 계산
-scripts/render.mjs                # MP4 / PNG 렌더 명령
-tests/price-change.test.ts        # 타이밍 및 입력 검증 테스트
-remotion.config.ts                # Studio/CLI 브라우저 설정
+src/components/PriceChangeCard/
+  PriceChangeCard.tsx             # facade: 입력 정규화 + 테마 선택
+  core/PriceChangeCardCore.tsx    # 정보 위계·배치·geometry·모션 적용
+  timing.ts                      # 기존 프레임 기반 모션 (변경 없음)
+  input.ts                       # canonical/legacy 정규화·입력 검증
+  types.ts                       # 외부 input / legacy props / render 옵션 타입
+  metadata.ts                    # 입력 검증 + FPS/길이 계산
+  themes/
+    types.ts                     # PriceChangeCardTheme / ThemeTokens 계약
+    techDynamic.ts               # 유일하게 구현한 테마의 시각 값
+    appearance.ts                # 테마 값 → 시각 style slot
+    index.ts                     # registry / getTheme / defaultTheme
+src/data/
+  price-change.sample.json       # 기존 Preview 예시 (변경 없음)
+  price-change.input.json        # 동일 S26 Ultra의 canonical input 예시
+src/design/
+  themes.ts                      # 기존 import 호환 re-export
+  tokens.ts                      # 공통 canvas·typography 기본값·motion
+src/remotion/Root.tsx             # 기존 Composition 등록 (변경 없음)
+scripts/render.mjs               # 기존 MP4 / final-frame PNG 명령 (변경 없음)
 ```
 
-향후 SpecCompare, Timeline, VerdictCard가 필요하면 `src/components/<이름>/`에 구현하고, props/data를 분리한 후 `src/remotion/Root.tsx`에 고유 ID의 Composition을 등록하세요. 디자인 토큰을 재사용하고 FPS에 따라 길이를 계산하는 `calculateMetadata`를 지정하세요. `scripts/render.mjs`는 v0.2.1에서 PriceChangeCard 전용이므로, 다른 컴포넌트를 추가하는 단계에서 Composition ID 옵션을 확장하면 됩니다. 이번 버전에는 다른 그래픽 컴포넌트를 포함하지 않습니다.
+흐름은 **props/input → normalizePriceChangeInput → getTheme → PriceChangeCardCore → Render**입니다. Core는 제품 데이터를 가져오거나 테마 이름을 선택하지 않습니다. 이미 정규화된 input과 구현된 `PriceChangeCardTheme` 객체를 받습니다. JSX의 정보 구조·위치·크기 맞춤·애니메이션은 Core가 담당하며, 색상·표면·border·shadow·radius·타이포그래피·화살표 선 스타일은 테마 계약과 style slot으로 분리했습니다. spacing은 기존 테마 토큰을 사용해 geometry를 계산합니다.
 
-## v0.2.1 검증
+`PriceChangeCardTheme`에는 기존 색상·표면·radius·spacing 토큰과 typography, appearance, arrow 계약을 포함합니다. `VisualStyle`은 글자 시각 속성으로 제한해 layout/motion이 테마에 들어가지 않도록 합니다. 기존 `src/design/themes.ts`의 getTheme/ThemeTokens import는 re-export로 유지합니다.
 
-v0.2의 5개 테스트와 2.5초 모션을 그대로 유지합니다. v0.2.1은 색상과 표면 표현만 다듬었으며 가격 크기·레이아웃·props·테마 기본값·샘플 데이터·FPS·렌더 명령을 유지합니다. 테마를 생략해도 techDynamic이 적용됩니다.
+향후 **premiumMinimal / valuePop**을 추가하려면:
+
+1. `themes/`에 새 구현 파일을 만들고 `PriceChangeCardTheme` 계약을 충족하는 값만 정의합니다.
+2. `themes/index.ts` 레지스트리에 해당 key를 등록합니다. 허용되는 theme 타입은 registry key에서 자동으로 확장됩니다.
+3. 외부 input의 theme 값을 새 key로 바꿉니다. Core·입력 타입 필드·렌더 명령은 재작성할 필요가 없습니다.
+4. 새로운 시각 속성이 필요할 때만 `themes/types.ts` 계약 및 `appearance.ts` slot 매핑을 확장합니다.
+
+이번 버전에는 techDynamic만 실제 구현했습니다. 다른 그래픽 컴포넌트·Variant·Control Panel·InfoBadge/Caption 시스템은 추가하지 않았습니다.
+
+## 9. v0.2.1 보존과 검증
+
+비교 기준은 `feature/price-change-card-v0.2.1` 브랜치의 `c4d9de37c3978f8e24975f8dfb1069aa2f4e160e` 커밋입니다. 원본 브랜치를 수정/삭제하지 않고 `feature/price-change-card-v0.3-core-theme`에서 작업합니다. v0.3은 디자인 변경 없이 코드 경계만 분리합니다.
+
+기존 5개 테스트는 그대로 유지하고 외부 input/legacy alias 우선순위·잘못된 canonical override·기존 theme import 호환성 회귀 검증을 추가했습니다.
 
 ```bash
 npm run typecheck
 npm test
 npm run render:png
-npm run render:png -- --transparent --output out/overlay.png
 npm run render:mp4
 npm run render:mp4 -- --fps 60 --output out/price-change-60.mp4
+npm run render:png -- --transparent --output out/overlay.png
 ```
+
+리팩터링 전 동일 머신에서 생성한 v0.2.1 영상과 v0.3의 canonical input 영상을 30/60fps 전체 프레임으로 비교합니다. 투명 PNG도 RGBA 픽셀을 비교합니다. 원본 영상/이미지는 ignored out/에 두며 GitHub에 포함하지 않습니다. 픽셀 일치는 검증한 Chromium·폰트·렌더 버전에서의 결과이며 다른 플랫폼의 폰트/브라우저 rasterization까지 보장하는 것은 아닙니다.
 
 ## 사용 시 참고
 
