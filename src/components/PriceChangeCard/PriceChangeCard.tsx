@@ -13,7 +13,7 @@ const numberStyle: CSSProperties = {
   fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.035em', whiteSpace: 'nowrap',
 };
 
-/** The only graphic in v0.2. Theme and direction are independent of product data. */
+/** The only graphic in v0.2.1. Theme and direction are independent of product data. */
 export const PriceChangeCard = (props: PriceChangeCardProps) => {
   const frame = useCurrentFrame();
   const {fps, width} = useVideoConfig();
@@ -39,8 +39,9 @@ export const PriceChangeCard = (props: PriceChangeCardProps) => {
   const divider: CSSProperties = {height: 1, background: theme.border, flexShrink: 0};
   const chip: CSSProperties = {
     ...numberStyle, display: 'inline-flex', alignItems: 'center', padding: '12px 24px',
-    background: theme.chipSurface, border: `1px solid ${theme.border}`, borderRadius: theme.radius.chip,
-    color, fontSize: tokens.typography.delta, fontWeight: 650, lineHeight: 1.3,
+    backgroundColor: theme.chipSurface, backgroundImage: theme.chipLayer,
+    border: `1px solid ${theme.chipBorder}`, borderRadius: theme.radius.chip, boxShadow: theme.chipShadow,
+    color: theme.primaryText, fontSize: tokens.typography.delta, fontWeight: 650, lineHeight: 1.3,
   };
 
   return (
@@ -65,9 +66,10 @@ export const PriceChangeCard = (props: PriceChangeCardProps) => {
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
             {props.productName}
           </div>
-          <div data-direction-badge style={{color, background: theme.chipSurface,
+          <div data-direction-badge style={{color, backgroundColor: theme.chipSurface,
+            backgroundImage: theme.chipLayer, boxShadow: theme.chipShadow,
             fontSize: tokens.typography.label, fontWeight: 600, padding: '10px 22px',
-            border: `1px solid ${theme.border}`, borderRadius: theme.radius.pill, whiteSpace: 'nowrap'}}>
+            border: `1px solid ${theme.chipBorder}`, borderRadius: theme.radius.pill, whiteSpace: 'nowrap'}}>
             {directionSymbol} {directionLabel}
           </div>
         </div>
@@ -89,28 +91,26 @@ export const PriceChangeCard = (props: PriceChangeCardProps) => {
             <div data-price-arrow aria-hidden style={{opacity: detail.arrow, marginTop: 38,
               clipPath: `inset(0 ${(1 - detail.arrow) * 100}% 0 0)`}}>
               <svg width="112" height="40" viewBox="0 0 112 40" style={{display: 'block', overflow: 'visible'}}>
-                <path d="M 2 20 H 105 M 90 5 L 105 20 L 90 35" fill="none" stroke={color}
-                  strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M 4 20 H 105 M 92 9 L 105 20 L 92 31" fill="none" stroke={theme.accent}
+                  strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             <div data-current-price style={{...reveal(motion.current, 14), minWidth: 0,
               transform: `translateY(${(1 - motion.current) * 14}px) scale(${0.985 + motion.current * 0.015})`,
               transformOrigin: 'left center'}}>
-              <div style={{display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12,
-                fontSize: tokens.typography.label, fontWeight: 600, color: theme.accent}}>
-                <span aria-hidden style={{width: 24, height: 2, background: theme.accent}} />현재 가격
-              </div>
+              <div data-current-price-label style={{marginBottom: 12, fontSize: tokens.typography.label,
+                fontWeight: 500, letterSpacing: '-0.015em', color: theme.secondaryText}}>현재 가격</div>
               <div data-current-price-value style={{...numberStyle, fontSize: priceSize,
                 fontWeight: 800, lineHeight: 1.35}}>{props.newPrice}</div>
             </div>
           </div>
           <div style={{display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 20}}>
             <span data-delta-chip style={{...chip, ...reveal(motion.delta)}}>{props.delta}</span>
-            <span data-percent-chip style={{...chip, ...reveal(detail.percent)}}>{props.deltaPercent}</span>
+            <span data-percent-chip style={{...chip, color, ...reveal(detail.percent)}}>{props.deltaPercent}</span>
           </div>
         </div>
         <div style={{...divider}} />
-        <div data-source style={{paddingTop: 24, fontSize: tokens.typography.source,
+        <div data-source style={{paddingTop: 22, fontSize: tokens.typography.source,
           color: theme.secondaryText, lineHeight: 1.4, display: 'flex', alignItems: 'center', gap: 16}}>
           <span style={{fontSize: tokens.typography.label}}>출처</span>
           <span>{props.sourceLabel}</span>

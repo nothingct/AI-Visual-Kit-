@@ -1,6 +1,6 @@
-# IT Visual Kit v0.2
+# IT Visual Kit v0.2.1
 
-YouTube IT 콘텐츠에서 반복해서 사용할 React + Remotion + TypeScript 영상용 그래픽 키트입니다. v0.2에는 **PriceChangeCard 하나만** 구현되어 있습니다. 기본 출력은 **1920×1080 / 30fps / 2.5초**이며, PNG 스틸과 H.264 MP4를 CapCut에 바로 가져올 수 있습니다.
+YouTube IT 콘텐츠에서 반복해서 사용할 React + Remotion + TypeScript 영상용 그래픽 키트입니다. v0.2.1에는 **PriceChangeCard 하나만** 구현되어 있습니다. 기본 출력은 **1920×1080 / 30fps / 2.5초**이며, PNG 스틸과 H.264 MP4를 CapCut에 바로 가져올 수 있습니다.
 
 ## 1. 설치
 
@@ -120,13 +120,15 @@ npm run render:png -- --fps 60 --output out/price-change-60.png
 npx remotion render src/index.ts PriceChangeCard out/direct-60.mp4 --props='{"renderFps":60}'
 ```
 
-## 7. v0.2 techDynamic 디자인과 애니메이션
+## 7. v0.2.1 techDynamic 디자인과 애니메이션
 
 기본 테마는 **techDynamic**입니다. OLED/플래그십 IT 제품에서 연상되는 deep navy, near-black, blue/cyan 무드를 사용합니다. 공식 Samsung UI, 로고, One UI 요소를 사용하거나 복제하지 않습니다.
 
 - 미세한 radial gradient 배경과 불투명한 카드 바탕 위의 레이어 gradient로 깊이를 표현합니다.
 - 얇은 blue border, 절제된 cyan 상단 edge, 약한 shadow를 사용합니다. 배경 blur, RGB, 외부 네온 glow는 없습니다.
-- blue/cyan이 기본 accent입니다. 상승은 orange, 하락은 mint, 유지는 blue-gray로 화살표·방향 pill·증감 chip만 강조합니다.
+- white/blue/cyan으로 통일하고 orange/red를 제거했습니다. 상승은 ice cyan, 하락은 cool periwinkle-blue, 유지는 blue-gray입니다. 방향은 색보다 ↑/↓/— 및 가격 상승/하락/유지 라벨과 가격·증감 문자열로 전달합니다. 화살표는 모든 방향에서 cyan을 사용합니다.
+- 금액 chip은 white, 비율 chip과 방향 pill은 방향별 cool accent입니다. dark navy 바탕에 얇은 cyan border, 미세한 gradient와 내부 highlight/약한 shadow를 적용했습니다.
+- 현재 가격 라벨의 장식 선을 제거하고 blue-gray의 500 weight로 정돈했습니다. 화살표 선은 3px→2.25px로 다듬고 화살촉도 작게 조정했습니다. 출처는 40px를 유지하고 footer 간격만 24px→22px로 조정했습니다.
 - 현재 가격은 154px에서 **134px**로 약 13% 줄이고, 이전 가격 **70px**과 같은 가로 흐름에 배치했습니다. `이전 가격 → 현재 가격`이 하나의 관계로 읽힙니다.
 - 증감 금액/비율은 같은 크기의 독립 chip으로 분리했습니다. 제품명은 600 weight, 보조정보는 34px, 출처는 기존 26px에서 **40px**로 확대했습니다. footer의 가격 종류 중복은 제거했습니다.
 - 1920×1080에서 카드의 폭은 **1600px (83.3%)**, 높이는 820px입니다. 좌우 160px, 상하 130px safe margin을 유지합니다.
@@ -144,7 +146,7 @@ npx remotion render src/index.ts PriceChangeCard out/direct-60.mp4 --props='{"re
 
 ### 테마 구조와 확장
 
-`src/design/themes.ts`의 `ThemeTokens` 계약에 background, backgroundDepth, surface, surfaceLayer, primaryText, secondaryText, accent, increase, decrease, neutral, border, edgeHighlight, chipSurface, glow, shadow, radius, spacing을 정의했습니다. `glow`는 외부 발광이 아니라 카드 내부의 매우 약한 edge 효과입니다.
+`src/design/themes.ts`의 `ThemeTokens` 계약에 background, backgroundDepth, surface, surfaceLayer, primaryText, secondaryText, accent, increase, decrease, neutral, border, edgeHighlight, chipSurface, chipLayer, chipBorder, chipShadow, glow, shadow, radius, spacing을 정의했습니다. `glow`는 외부 발광이 아니라 카드 내부의 매우 약한 edge 효과입니다.
 
 `themes` 레지스트리와 `getTheme()`이 테마를 선택합니다. `PriceChangeTheme` 타입은 레지스트리 key에서 자동으로 생성됩니다. 테마를 생략하면 `defaultTheme = "techDynamic"`을 사용합니다. 방향 색상은 제품 브랜드와 독립적입니다. 폰트/해상도/모션 공통값은 `src/design/tokens.ts`에 유지합니다.
 
@@ -174,11 +176,11 @@ tests/price-change.test.ts        # 타이밍 및 입력 검증 테스트
 remotion.config.ts                # Studio/CLI 브라우저 설정
 ```
 
-향후 SpecCompare, Timeline, VerdictCard가 필요하면 `src/components/<이름>/`에 구현하고, props/data를 분리한 후 `src/remotion/Root.tsx`에 고유 ID의 Composition을 등록하세요. 디자인 토큰을 재사용하고 FPS에 따라 길이를 계산하는 `calculateMetadata`를 지정하세요. `scripts/render.mjs`는 v0.2에서 PriceChangeCard 전용이므로, 다른 컴포넌트를 추가하는 단계에서 Composition ID 옵션을 확장하면 됩니다. 이번 버전에는 다른 그래픽 컴포넌트를 포함하지 않습니다.
+향후 SpecCompare, Timeline, VerdictCard가 필요하면 `src/components/<이름>/`에 구현하고, props/data를 분리한 후 `src/remotion/Root.tsx`에 고유 ID의 Composition을 등록하세요. 디자인 토큰을 재사용하고 FPS에 따라 길이를 계산하는 `calculateMetadata`를 지정하세요. `scripts/render.mjs`는 v0.2.1에서 PriceChangeCard 전용이므로, 다른 컴포넌트를 추가하는 단계에서 Composition ID 옵션을 확장하면 됩니다. 이번 버전에는 다른 그래픽 컴포넌트를 포함하지 않습니다.
 
-## v0.2 검증
+## v0.2.1 검증
 
-기존 3개 테스트를 유지하고 모션 경계 기대값을 v0.2 타이밍으로 업데이트했습니다. 화살표/chip의 완료 시점·범위와 기존 props의 테마 기본값·미구현 테마 검증을 추가했습니다. 총 5개 테스트입니다.
+v0.2의 5개 테스트와 2.5초 모션을 그대로 유지합니다. v0.2.1은 색상과 표면 표현만 다듬었으며 가격 크기·레이아웃·props·테마 기본값·샘플 데이터·FPS·렌더 명령을 유지합니다. 테마를 생략해도 techDynamic이 적용됩니다.
 
 ```bash
 npm run typecheck
