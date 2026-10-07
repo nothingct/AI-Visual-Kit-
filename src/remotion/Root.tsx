@@ -4,10 +4,11 @@ import {priceChangeMetadata} from '../components/PriceChangeCard/metadata';
 import type {PriceChangeCompositionProps} from '../components/PriceChangeCard/types';
 import sample from '../data/price-change.sample.json';
 import {tokens} from '../design/tokens';
+import {defaultTheme} from '../design/themes';
 
 const defaultProps: PriceChangeCompositionProps = {
   ...sample, direction: sample.direction as PriceChangeCompositionProps['direction'],
-  renderFps: 30, transparent: false,
+  renderFps: 30, transparent: false, theme: defaultTheme,
 };
 
 /** Composition registry, not an additional graphic component. */

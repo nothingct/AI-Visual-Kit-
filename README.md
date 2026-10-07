@@ -1,6 +1,6 @@
-# IT Visual Kit v0.1
+# IT Visual Kit v0.2
 
-YouTube IT 콘텐츠에서 반복해서 사용할 React + Remotion + TypeScript 영상용 그래픽 키트입니다. v0.1에는 **PriceChangeCard 하나만** 구현되어 있습니다. 기본 출력은 **1920×1080 / 30fps / 2.5초**이며, PNG 스틸과 H.264 MP4를 CapCut에 바로 가져올 수 있습니다.
+YouTube IT 콘텐츠에서 반복해서 사용할 React + Remotion + TypeScript 영상용 그래픽 키트입니다. v0.2에는 **PriceChangeCard 하나만** 구현되어 있습니다. 기본 출력은 **1920×1080 / 30fps / 2.5초**이며, PNG 스틸과 H.264 MP4를 CapCut에 바로 가져올 수 있습니다.
 
 ## 1. 설치
 
@@ -66,6 +66,8 @@ npm run render:mp4 -- --props ./src/data/price-change.sample.json
 npm run render:png -- --props ./src/data/price-change.sample.json
 ```
 
+`theme`는 선택 prop이며 기본값은 `"techDynamic"`입니다. 기존 9개 데이터 필드만 있는 JSON도 그대로 동작합니다. 지금은 techDynamic만 구현되어 있으며 premiumMinimal/valuePop 등 미구현 테마를 지정하면 오류가 표시됩니다. 별도 JSON에 `"theme": "techDynamic"`을 추가해 명시할 수 있습니다.
+
 보조 렌더 옵션은 `renderFps: 30 | 60`, `transparent: boolean`입니다. Preview에서 60fps를 보려면 별도 JSON에 `"renderFps": 60`을 추가하고 `--props`로 읽습니다. 값이 비어 있거나 유효하지 않은 방향/FPS를 입력하면 렌더가 오류로 중단됩니다.
 
 ## 4. MP4 렌더 및 CapCut 사용
@@ -118,20 +120,40 @@ npm run render:png -- --fps 60 --output out/price-change-60.png
 npx remotion render src/index.ts PriceChangeCard out/direct-60.mp4 --props='{"renderFps":60}'
 ```
 
-## 7. 디자인과 애니메이션
+## 7. v0.2 techDynamic 디자인과 애니메이션
 
-공통 색상·타이포그래피·간격·모션·해상도는 `src/design/tokens.ts`에 있습니다. 밝은 숫자와 어두운 중립 배경을 사용하며, 글로우나 과도한 장식을 넣지 않았습니다. 주요 콘텐츠는 화면 가장자리에서 96px 안쪽에 배치합니다.
+기본 테마는 **techDynamic**입니다. OLED/플래그십 IT 제품에서 연상되는 deep navy, near-black, blue/cyan 무드를 사용합니다. 공식 Samsung UI, 로고, One UI 요소를 사용하거나 복제하지 않습니다.
 
-정보 위계는 현재 가격 → 이전/현재 변화 → 증감 금액/비율 → 제품명 → 기간/가격 종류 → 출처 순입니다. 긴 현재 가격은 자동으로 크기를 줄이고, 긴 제품명은 한 줄 말줄임을 적용합니다. 매우 긴 보조정보는 Preview로 확인해 짧게 편집하세요.
+- 미세한 radial gradient 배경과 불투명한 카드 바탕 위의 레이어 gradient로 깊이를 표현합니다.
+- 얇은 blue border, 절제된 cyan 상단 edge, 약한 shadow를 사용합니다. 배경 blur, RGB, 외부 네온 glow는 없습니다.
+- blue/cyan이 기본 accent입니다. 상승은 orange, 하락은 mint, 유지는 blue-gray로 화살표·방향 pill·증감 chip만 강조합니다.
+- 현재 가격은 154px에서 **134px**로 약 13% 줄이고, 이전 가격 **70px**과 같은 가로 흐름에 배치했습니다. `이전 가격 → 현재 가격`이 하나의 관계로 읽힙니다.
+- 증감 금액/비율은 같은 크기의 독립 chip으로 분리했습니다. 제품명은 600 weight, 보조정보는 34px, 출처는 기존 26px에서 **40px**로 확대했습니다. footer의 가격 종류 중복은 제거했습니다.
+- 1920×1080에서 카드의 폭은 **1600px (83.3%)**, 높이는 820px입니다. 좌우 160px, 상하 130px safe margin을 유지합니다.
+
+긴 가격은 각 열의 폭에 맞춰 글자 크기를 줄이며, 긴 제품명은 한 줄 말줄임을 적용합니다. 모바일 확인은 PNG를 **384×216 또는 480×270**으로 축소해 이전/현재 가격과 증감이 읽히는지 검토하세요. 매우 긴 보조정보는 Preview에서 확인해 간결하게 편집하세요.
 
 | 시간 | 동작 |
 | --- | --- |
-| 0.0~0.4초 | 제품명과 날짜·가격 종류·출처 등장 |
-| 0.4~1.5초 | 이전 가격과 화살표 등장 후 현재 가격 강조 |
-| 1.5~2.2초 | 증감 금액과 비율 등장 |
-| 2.2~2.5초 | 최종 상태 유지 |
+| 0.0~0.35초 | 카드·제품명·meta·출처가 작은 수직 이동과 fade로 등장 |
+| 0.35~1.25초 | 이전 가격 → 얇은 화살표 sweep → 현재 가격 등장 |
+| 1.25~1.95초 | 금액/비율 chip이 작은 시간차로 등장 |
+| 1.95~2.5초 | 모든 모션이 끝난 최종 상태 유지 |
 
-애니메이션은 `frame / fps`를 기준으로 계산합니다. 타이머나 임의 값에 의존하지 않아서 Preview와 렌더 결과가 동일합니다.
+현재 가격의 scale 변화는 0.985→1.0에 한정합니다. bounce, zoom, shake, pulse를 사용하지 않습니다. 모션은 `frame / fps` 기준이며 30/60fps에서 동일한 길이를 유지합니다.
+
+### 테마 구조와 확장
+
+`src/design/themes.ts`의 `ThemeTokens` 계약에 background, backgroundDepth, surface, surfaceLayer, primaryText, secondaryText, accent, increase, decrease, neutral, border, edgeHighlight, chipSurface, glow, shadow, radius, spacing을 정의했습니다. `glow`는 외부 발광이 아니라 카드 내부의 매우 약한 edge 효과입니다.
+
+`themes` 레지스트리와 `getTheme()`이 테마를 선택합니다. `PriceChangeTheme` 타입은 레지스트리 key에서 자동으로 생성됩니다. 테마를 생략하면 `defaultTheme = "techDynamic"`을 사용합니다. 방향 색상은 제품 브랜드와 독립적입니다. 폰트/해상도/모션 공통값은 `src/design/tokens.ts`에 유지합니다.
+
+**premiumMinimal / valuePop 추가 방법:**
+
+1. `src/design/themes.ts`의 `themes`에 해당 key와 `ThemeTokens`의 모든 값을 추가합니다. `satisfies Record<string, ThemeTokens>`가 필수 토큰 누락을 검사합니다.
+2. 데이터 JSON에 `"theme": "premiumMinimal"` 또는 `"theme": "valuePop"`을 지정합니다. 타입과 런타임 선택은 레지스트리에 따라 자동 확장됩니다.
+3. 기존 테마 테스트의 미구현 테마 오류 케이스를 새 테마의 성공 케이스로 바꾸고, PNG/MP4/투명 PNG와 축소 화면을 검증합니다.
+4. 공통 글자 크기와 모션은 tokens.ts에서 조정합니다. 테마별 typography/motion이 필요해지면 ThemeTokens에 해당 계약을 추가하세요. 독립적인 새 컴포넌트를 만들 필요는 없습니다.
 
 ## 8. 구조와 향후 컴포넌트 추가
 
@@ -139,7 +161,8 @@ npx remotion render src/index.ts PriceChangeCard out/direct-60.mp4 --props='{"re
 src/
   index.ts                        # 폰트 및 Remotion 진입점
   remotion/Root.tsx                # Composition 등록
-  design/tokens.ts                # 공통 디자인 토큰
+  design/tokens.ts                # 공통 해상도·글자 크기·모션
+  design/themes.ts                # 테마 계약·레지스트리·기본 테마
   data/price-change.sample.json    # 제품 데이터
   components/PriceChangeCard/
     PriceChangeCard.tsx            # 유일한 그래픽 컴포넌트
@@ -147,11 +170,24 @@ src/
     timing.ts                     # 프레임 기반 모션
     metadata.ts                   # 입력 검증, FPS/길이 계산
 scripts/render.mjs                # MP4 / PNG 렌더 명령
-tests/price-change.test.ts       # 타이밍 및 입력 검증 테스트
+tests/price-change.test.ts        # 타이밍 및 입력 검증 테스트
 remotion.config.ts                # Studio/CLI 브라우저 설정
 ```
 
-향후 SpecCompare, Timeline, VerdictCard가 필요하면 `src/components/<이름>/`에 구현하고, props/data를 분리한 후 `src/remotion/Root.tsx`에 고유 ID의 Composition을 등록하세요. 디자인 토큰을 재사용하고 FPS에 따라 길이를 계산하는 `calculateMetadata`를 지정하세요. `scripts/render.mjs`는 v0.1에서 PriceChangeCard 전용이므로, 다른 컴포넌트를 추가하는 단계에서 Composition ID 옵션을 확장하면 됩니다. 이번 버전에는 다른 그래픽 컴포넌트를 포함하지 않습니다.
+향후 SpecCompare, Timeline, VerdictCard가 필요하면 `src/components/<이름>/`에 구현하고, props/data를 분리한 후 `src/remotion/Root.tsx`에 고유 ID의 Composition을 등록하세요. 디자인 토큰을 재사용하고 FPS에 따라 길이를 계산하는 `calculateMetadata`를 지정하세요. `scripts/render.mjs`는 v0.2에서 PriceChangeCard 전용이므로, 다른 컴포넌트를 추가하는 단계에서 Composition ID 옵션을 확장하면 됩니다. 이번 버전에는 다른 그래픽 컴포넌트를 포함하지 않습니다.
+
+## v0.2 검증
+
+기존 3개 테스트를 유지하고 모션 경계 기대값을 v0.2 타이밍으로 업데이트했습니다. 화살표/chip의 완료 시점·범위와 기존 props의 테마 기본값·미구현 테마 검증을 추가했습니다. 총 5개 테스트입니다.
+
+```bash
+npm run typecheck
+npm test
+npm run render:png
+npm run render:png -- --transparent --output out/overlay.png
+npm run render:mp4
+npm run render:mp4 -- --fps 60 --output out/price-change-60.mp4
+```
 
 ## 사용 시 참고
 
