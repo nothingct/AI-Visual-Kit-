@@ -1,11 +1,3 @@
-import {techDynamic} from './techDynamic';
-import type {PriceChangeCardTheme} from './types';
-
-export const themes = {techDynamic} satisfies Record<string, PriceChangeCardTheme>;
-export type PriceChangeTheme = keyof typeof themes;
-export const defaultTheme: PriceChangeTheme = 'techDynamic';
-export const getTheme = (name: PriceChangeTheme = defaultTheme): PriceChangeCardTheme => {
-  if (!Object.hasOwn(themes, name)) throw new Error(`Unsupported theme: ${String(name)}`);
-  return themes[name];
-};
-export type {PriceChangeCardTheme, ThemeTokens} from './types';
+/** Legacy import path; selection now uses the global registry + component adapter. */
+export {themes, defaultTheme, getTheme} from '../theme';
+export type {PriceChangeTheme, PriceChangeCardTheme, ThemeTokens} from '../theme';

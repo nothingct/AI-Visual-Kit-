@@ -1,4 +1,6 @@
-# IT Visual Kit v0.3
+# IT Visual Kit — Global Shared Theme Architecture v0.1
+
+PriceChangeCard는 v0.3 디자인과 public input을 유지하며, 테마 공급 경로만 전역 공유 구조로 변경했습니다.
 
 YouTube IT 콘텐츠에서 반복해서 사용할 React + Remotion + TypeScript 영상용 그래픽 키트입니다. v0.3에는 **PriceChangeCard 하나만** 구현되어 있습니다. 기본 출력은 **1920×1080 / 30fps / 2.5초**이며, PNG 스틸과 H.264 MP4를 CapCut에 바로 가져올 수 있습니다.
 
@@ -164,60 +166,72 @@ npx remotion render src/index.ts PriceChangeCard out/direct-60.mp4 --props='{"re
 
 현재 가격의 scale 변화는 0.985→1.0에 한정합니다. bounce, zoom, shake, pulse를 사용하지 않습니다. 모션은 `frame / fps` 기준이며 30/60fps에서 동일한 길이를 유지합니다.
 
-## 8. Core / Theme / Input 구조
+## 8. Global Theme / Component Adapter / Core
 
 ```text
+src/design/themes/
+  types.ts                        # GlobalTheme / ThemeName / ThemeRegistryEntry
+  techDynamic.ts                  # Kit 전체의 공통 디자인 언어
+  registry.ts                     # 구현/예정 상태와 전역 선택
+  index.ts                        # 새 Component용 canonical API
 src/components/PriceChangeCard/
-  PriceChangeCard.tsx             # facade: 입력 정규화 + 테마 선택
-  core/PriceChangeCardCore.tsx    # 정보 위계·배치·geometry·모션 적용
-  timing.ts                      # 기존 프레임 기반 모션 (변경 없음)
-  input.ts                       # canonical/legacy 정규화·입력 검증
-  types.ts                       # 외부 input / legacy props / render 옵션 타입
-  metadata.ts                    # 입력 검증 + FPS/길이 계산
-  themes/
-    types.ts                     # PriceChangeCardTheme / ThemeTokens 계약
-    techDynamic.ts               # 유일하게 구현한 테마의 시각 값
-    appearance.ts                # 테마 값 → 시각 style slot
-    index.ts                     # registry / getTheme / defaultTheme
-src/data/
-  price-change.sample.json       # 기존 Preview 예시 (변경 없음)
-  price-change.input.json        # 동일 S26 Ultra의 canonical input 예시
-src/design/
-  themes.ts                      # 기존 import 호환 re-export
-  tokens.ts                      # 공통 canvas·typography 기본값·motion
-src/remotion/Root.tsx             # 기존 Composition 등록 (변경 없음)
-scripts/render.mjs               # 기존 MP4 / final-frame PNG 명령 (변경 없음)
+  PriceChangeCard.tsx              # 기존 facade (변경 없음)
+  core/PriceChangeCardCore.tsx     # 기존 layout·geometry·motion (변경 없음)
+  input.ts, types.ts, metadata.ts  # 기존 external input 및 검증 (변경 없음)
+  timing.ts                       # 기존 모션 (변경 없음)
+  theme/
+    types.ts                      # GlobalTheme + PriceChangeCard 전용 계약
+    adapter.ts                    # 전역 언어 → PriceChangeCard 전용 토큰
+    appearance.ts                 # component visual slot 매핑
+    index.ts                      # 전역 선택과 adapter 연결
+  themes/                         # 기존 네 파일의 호환 re-export
+src/design/themes.ts              # 기존 PriceChangeCard import 호환 파일
 ```
 
-흐름은 **props/input → normalizePriceChangeInput → getTheme → PriceChangeCardCore → Render**입니다. Core는 제품 데이터를 가져오거나 테마 이름을 선택하지 않습니다. 이미 정규화된 input과 구현된 `PriceChangeCardTheme` 객체를 받습니다. JSX의 정보 구조·위치·크기 맞춤·애니메이션은 Core가 담당하며, 색상·표면·border·shadow·radius·타이포그래피·화살표 선 스타일은 테마 계약과 style slot으로 분리했습니다. spacing은 기존 테마 토큰을 사용해 geometry를 계산합니다.
+**전역 책임:** background/depth, surface/layer, text/accent/방향 색상, border/edge highlight, control surface/layer/border/shadow, glow/shadow, panel/control/pill 기본 radius, fontFamily입니다. `GlobalTheme`는 Component와 React에 의존하지 않으며 PriceChangeCard의 가격 글자 크기·arrow·spacing·appearance를 포함하지 않습니다. 기존 chip 표면 값을 재사용 가능한 control 표면으로 명명했습니다.
 
-`PriceChangeCardTheme`에는 기존 색상·표면·radius·spacing 토큰과 typography, appearance, arrow 계약을 포함합니다. `VisualStyle`은 글자 시각 속성으로 제한해 layout/motion이 테마에 들어가지 않도록 합니다. 기존 `src/design/themes.ts`의 getTheme/ThemeTokens import는 re-export로 유지합니다.
+**PriceChangeCard adapter 책임:** price/oldPrice/delta 및 title/meta/source의 글자 크기, 글자 weight/line-height, arrow stroke, PriceChangeCard spacing, component appearance slot, 글로벌 control 표면→chip 표면 및 radius 매핑입니다. Price-flow column과 chip geometry는 기존 Core에 그대로 남습니다.
 
-향후 **premiumMinimal / valuePop**을 추가하려면:
+흐름은 **input → facade → Global Theme registry → PriceChangeCard adapter → Core → Render**입니다. Core 파일을 재작성하지 않았으며 Core가 테마 이름이나 구현/예정 상태를 선택하지 않습니다. 전역 토큰은 immutable 계약이며 adapter는 전역 객체별로 결과를 재사용합니다.
 
-1. `themes/`에 새 구현 파일을 만들고 `PriceChangeCardTheme` 계약을 충족하는 값만 정의합니다.
-2. `themes/index.ts` 레지스트리에 해당 key를 등록합니다. 허용되는 theme 타입은 registry key에서 자동으로 확장됩니다.
-3. 외부 input의 theme 값을 새 key로 바꿉니다. Core·입력 타입 필드·렌더 명령은 재작성할 필요가 없습니다.
-4. 새로운 시각 속성이 필요할 때만 `themes/types.ts` 계약 및 `appearance.ts` slot 매핑을 확장합니다.
+### 전역 Theme Registry
 
-이번 버전에는 techDynamic만 실제 구현했습니다. 다른 그래픽 컴포넌트·Variant·Control Panel·InfoBadge/Caption 시스템은 추가하지 않았습니다.
+```ts
+import {getGlobalTheme, themeRegistry} from './src/design/themes/registry';
+import type {ThemeName} from './src/design/themes/types';
 
-## 9. v0.2.1 보존과 검증
+const language = getGlobalTheme('techDynamic');
+// language.accent / language.surface / language.fontFamily 등 공통 토큰
+// themeRegistry에는 techDynamic(implemented), premiumMinimal/valuePop(planned)가 있습니다.
+```
 
-비교 기준은 `feature/price-change-card-v0.2.1` 브랜치의 `c4d9de37c3978f8e24975f8dfb1069aa2f4e160e` 커밋입니다. 원본 브랜치를 수정/삭제하지 않고 `feature/price-change-card-v0.3-core-theme`에서 작업합니다. v0.3은 디자인 변경 없이 코드 경계만 분리합니다.
+premiumMinimal과 valuePop은 이름과 planned 상태만 등록했습니다. 빈 디자인이나 techDynamic fallback을 넣지 않았습니다. 미구현 이름을 선택하면 `Unsupported theme: <name> (not implemented)`, 알 수 없는 이름은 `Unsupported theme: <name>` 오류가 납니다. PriceChangeCard를 통해 선택해도 동일하게 차단합니다.
 
-기존 5개 테스트는 그대로 유지하고 외부 input/legacy alias 우선순위·잘못된 canonical override·기존 theme import 호환성 회귀 검증을 추가했습니다.
+기존 `src/design/themes.ts`의 getTheme/themes/ThemeTokens와 `PriceChangeCard/themes/*` import는 resolved PriceChangeCard adapter를 반환하는 호환 API로 유지합니다. **새 Component는 전역 `src/design/themes/registry` 또는 `src/design/themes/index`를 import하세요.** 기존 파일과 새 디렉터리가 함께 있으므로 경로를 명시하면 호환 파일을 잘못 선택하지 않습니다.
+
+### 후속 Component와 Theme 추가
+
+SectionIntro, Timeline 등은 후속 작업에서 각자의 Core와 appearance adapter를 만들고 `getGlobalTheme(themeName)`의 결과를 자신의 adapter에 전달하면 됩니다. 색상·폰트·표면·radius 기본값을 복사하지 않고 전역 객체를 사용하며, 자신의 글자 크기·geometry·spacing·slot은 Component 내부에서 정의합니다. 이번 작업에서 후속 Component나 Control Panel/Variant는 구현하지 않았습니다.
+
+premiumMinimal/valuePop을 실제 구현할 때는 `src/design/themes/<name>.ts`에 **GlobalTheme 값만** 정의하고, `registry.ts`의 해당 planned 항목을 `{status: 'implemented', tokens: ...}`로 교체합니다. `globalThemes`는 registry에서 구현된 항목만 자동으로 추출하므로 별도 목록을 수정하지 않습니다. PriceChangeCard의 `getTheme()`는 전역 선택 결과를 기존 adapter에 전달하므로 이름별 색상 복사나 새로운 Core가 필요 없습니다. Component 전용 표현을 더 추가할 때만 해당 Component adapter와 appearance를 확장하세요.
+
+## 9. v0.3 보존과 시각 회귀 검증
+
+비교 기준은 `feature/price-change-card-v0.3-core-theme`의 `4ff6818d6ac1ea501ea0442804e70f11e510ea81` 커밋입니다. 원본 브랜치를 유지하고 `feature/global-shared-theme-v0.1`에서 작업합니다. PriceChangeCard Core, public/canonical/legacy input, sample, Root, timing, renderFps/transparent, 렌더 스크립트와 기존 9개 테스트 파일은 그대로 유지합니다.
 
 ```bash
 npm run typecheck
 npm test
+npm start
 npm run render:png
 npm run render:mp4
 npm run render:mp4 -- --fps 60 --output out/price-change-60.mp4
 npm run render:png -- --transparent --output out/overlay.png
 ```
 
-리팩터링 전 동일 머신에서 생성한 v0.2.1 영상과 v0.3의 canonical input 영상을 30/60fps 전체 프레임으로 비교합니다. 투명 PNG도 RGBA 픽셀을 비교합니다. 원본 영상/이미지는 ignored out/에 두며 GitHub에 포함하지 않습니다. 픽셀 일치는 검증한 Chromium·폰트·렌더 버전에서의 결과이며 다른 플랫폼의 폰트/브라우저 rasterization까지 보장하는 것은 아닙니다.
+새 input 파일과 기존 sample 파일의 `--props` 사용법도 동일합니다. 이전 테스트에 추가해 전역 토큰 경계, planned/unknown theme 오류, 전역 토큰 변경의 adapter 반영, 기존 import/adapter 객체 호환성을 검증합니다.
+
+마이그레이션 전 동일 머신에서 생성한 v0.3 S26 Ultra + techDynamic을 기준으로 final-frame PNG, 투명 PNG의 RGBA 픽셀과 30/60fps 영상의 전체 decoded frame hash를 비교합니다. 1920×1080·2.5초·H.264/yuv420p/BT.709를 유지합니다. 동일 환경 검증에서 30fps 75프레임·60fps 150프레임과 일반/투명 PNG의 RGBA 픽셀이 모두 v0.3과 정확히 일치했습니다. 타입 검사, 테스트 13개, Studio 실제 재생도 통과했습니다. 비교용 파일은 ignored out/에 보관하고 GitHub에 포함하지 않습니다.
 
 ## 사용 시 참고
 
