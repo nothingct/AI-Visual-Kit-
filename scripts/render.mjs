@@ -11,6 +11,7 @@ const {values, positionals} = parseArgs({
   allowPositionals: true,
   options: {
     fps: {type: 'string'},
+    composition: {type: 'string', default: 'PriceChangeCard'},
     props: {type: 'string'},
     output: {type: 'string'},
     frame: {type: 'string'},
@@ -20,27 +21,32 @@ const {values, positionals} = parseArgs({
 });
 const format = positionals[0];
 if (values.help) {
-  console.log('npm run render:mp4|render:png -- [--fps 30|60] [--props data.json] [--output path] [--frame N (PNG)] [--transparent (PNG)]');
+  console.log('npm run render:mp4|render:png -- [--composition PriceChangeCard|SectionIntro] [--fps 30|60] [--props data.json] [--output path] [--frame N (PNG)] [--transparent (PNG)]');
   process.exit(0);
 }
 if (!['mp4', 'png'].includes(format) || positionals.length !== 1) throw new Error('Choose mp4 or png.');
 if (values.fps && !['30', '60'].includes(values.fps)) throw new Error('--fps must be 30 or 60.');
 if (format === 'mp4' && values.transparent) throw new Error('Transparent output is supported for PNG only. H.264 MP4 has no alpha channel.');
 if (format === 'mp4' && values.frame !== undefined) throw new Error('--frame is only supported for PNG.');
+const id = values.composition;
+if (!['PriceChangeCard', 'SectionIntro'].includes(id)) throw new Error('Unknown composition: ' + id);
+const basename = id === 'SectionIntro' ? 'section-intro' : 'price-change';
 const custom = values.props ? JSON.parse(await readFile(resolve(values.props), 'utf8')) : {};
 if (!custom || typeof custom !== 'object' || Array.isArray(custom)) throw new Error('Props JSON must be an object.');
 const inputProps = {...custom};
+// A custom SectionIntro input may intentionally omit its optional subtitle.
+if (id === 'SectionIntro' && values.props && !Object.hasOwn(custom, 'subtitle')) inputProps.subtitle = '';
 if (values.fps) inputProps.renderFps = Number(values.fps);
 if (values.transparent) inputProps.transparent = true;
 if (format === 'mp4' && inputProps.transparent === true) throw new Error('Use PNG for transparent overlays, or set transparent to false for MP4.');
 
 const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE ??
   (existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined);
-const outputLocation = resolve(values.output ?? `${root}/out/price-change.${format}`);
+const outputLocation = resolve(values.output ?? `${root}/out/${basename}.${format}`);
 const serveUrl = await bundle({entryPoint: resolve(root, 'src/index.ts')});
 const browser = await openBrowser('chrome', {browserExecutable});
 try {
-  const composition = await selectComposition({serveUrl, id: 'PriceChangeCard', inputProps, puppeteerInstance: browser});
+  const composition = await selectComposition({serveUrl, id, inputProps, puppeteerInstance: browser});
   await mkdir(dirname(outputLocation), {recursive: true});
   if (format === 'png') {
     const frame = values.frame === undefined ? composition.durationInFrames - 1 : Number(values.frame);
